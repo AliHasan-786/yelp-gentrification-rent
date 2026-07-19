@@ -1,4 +1,6 @@
 .DS_Store
+.playwright-cli/
+.venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/

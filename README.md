@@ -27,6 +27,35 @@ This project investigates whether gentrification-linked language patterns in Yel
 - Gentrification density effects are heterogeneous across metros — the relationship is not uniform across the five-metro sample (H2 supported: joint F = 2.8447, p = 0.0231)
 - The highest language-score quartile's controlled estimate is positive but not statistically significant relative to the lowest quartile (H3 not supported: +0.3741 percentage points, p = 0.2075)
 
+## Interactive P1
+
+`site/` contains the P1 working interactive: a static choropleth with metro controls, a 2015–2022 year slider, and a clickable ZIP drill-down comparing the PCA language score with next-year rent growth. It has no backend or runtime dependencies.
+
+Every number and chart series in the interactive regenerates from `data/analysis_ready.csv`:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python scripts/build_site_data.py
+python -m http.server 8000 -d site
+```
+
+Then open <http://localhost:8000>. Dependency versions are pinned in `requirements.txt`.
+
+The build produces:
+
+| Extract | Contents |
+|---|---|
+| `site/data/panel.json` | PCA scores, ZIP-year chart series, metro-specific controlled slopes, and metadata |
+| `site/data/zcta.geojson` | The 238 selected 2020 Census ZCTA boundaries, joined to the five analysis metros |
+
+The compact boundary source and its Census TIGERweb provenance are documented in `data/geography/README.md`. Use `python scripts/build_site_data.py --refresh-geometry` to retrieve a fresh copy of the same 2020-vintage boundaries.
+
+### Mapping correction
+
+The committed CSV has 1,113 source rows, including eight exact cross-metro duplicate assignments: ZIP `37076` appears under both Nashville and Indianapolis, and ZIP `70122` under both New Orleans and Tampa Bay. The interactive pipeline validates that the duplicated numeric rows are otherwise identical, keeps the geographically correct assignments (Nashville and New Orleans), and maps 1,105 ZIP-years. On this corrected mapping panel, the H2 metro-interaction test remains significant (joint p = 0.0293, compared with p = 0.0231 in the original final-analysis notebook).
+
 ## Notebooks
 
 | Notebook | Description |
@@ -34,6 +63,7 @@ This project investigates whether gentrification-linked language patterns in Yel
 | `notebooks/phase1_data_collection.ipynb` | Data collection, ZIP-level merging of Yelp + Zillow, metro filtering, cleaning |
 | `notebooks/phase2_eda.ipynb` | Exploratory analysis: coverage, missingness, rent trends, keyword correlations, initial OLS |
 | `notebooks/phase3_hypothesis_testing.ipynb` | PCA construction, hypothesis testing (H1/H2/H3), robustness checks |
+| `notebooks/site_data_pipeline.ipynb` | Human-readable entry point for regenerating and validating the static P1 extracts |
 
 ## Data
 

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Explore how gentrification-linked Yelp language precedes next-year rent growth across five U.S. metro areas."
+    >
+    <title>The Brunch Index — Yelp language and rent growth</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23191815'/%3E%3Cpath d='M8 8h9a5 5 0 0 1 0 10H8zm0 10h10a5 5 0 0 1 0 10H8z' fill='%23f4efe4'/%3E%3C/svg%3E"
+    >
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#explorer">Skip to the interactive</a>
+
+    <header class="masthead">
+      <p class="kicker">Yelp language × neighborhood rent</p>
+      <h1>The Brunch Index</h1>
+      <p class="dek">
+        Explore how a data-driven vocabulary score in restaurant reviews
+        precedes next-year rent growth—ZIP by ZIP, from 2015 through 2022.
+      </p>
+      <div class="masthead-meta">
+        <span id="header-rows">Loading ZIP-years</span>
+        <span id="header-zips">Loading ZIP codes</span>
+        <span id="header-metros">Loading metro areas</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="explorer" id="explorer" aria-labelledby="explorer-title">
+        <header class="section-heading">
+          <p class="section-number">01 / The map</p>
+          <h2 id="explorer-title">One score. Five different housing markets.</h2>
+          <p>
+            Pick a metro and year, then select a ZIP to compare its Yelp
+            language trajectory with the rent growth observed one year later.
+          </p>
+        </header>
+
+        <div
+          class="metro-controls"
+          id="metro-controls"
+          role="group"
+          aria-label="Choose a metro area"
+        ></div>
+
+        <div class="time-control">
+          <label for="year-slider">Review year</label>
+          <input
+            id="year-slider"
+            type="range"
+            min="2015"
+            max="2022"
+            step="1"
+            value="2021"
+          >
+          <output id="year-output" for="year-slider">2021</output>
+          <div class="year-ticks" aria-hidden="true">
+            <span>2015</span>
+            <span>2022</span>
+          </div>
+        </div>
+
+        <div class="explorer-grid">
+          <div class="map-column">
+            <div class="map-heading">
+              <div>
+                <p class="label">Yelp language score</p>
+                <h3 id="map-title">Philadelphia · 2021</h3>
+              </div>
+              <p id="map-count">Loading ZIPs…</p>
+            </div>
+
+            <div class="map-wrap">
+              <svg
+                id="map"
+                viewBox="0 0 760 540"
+                role="img"
+                aria-labelledby="map-title map-description"
+              >
+                <desc id="map-description">
+                  Choropleth map of the PCA-derived Yelp language score by ZIP
+                  code. Select a ZIP for its time series.
+                </desc>
+              </svg>
+              <div class="tooltip" id="tooltip" role="status" hidden></div>
+            </div>
+
+            <div class="legend" aria-label="Language score color legend">
+              <span>Lower score</span>
+              <div class="legend-swatches" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <span>Higher score</span>
+            </div>
+          </div>
+
+          <aside class="detail-column" aria-live="polite">
+            <div class="detail-heading">
+              <p class="label">Selected neighborhood</p>
+              <h3 id="zip-title">ZIP —</h3>
+              <p id="zip-metro">Select a ZIP on the map</p>
+            </div>
+
+            <dl class="metrics">
+              <div>
+                <dt>Language PC1</dt>
+                <dd id="metric-score">—</dd>
+              </div>
+              <div>
+                <dt>Average rent index</dt>
+                <dd id="metric-rent">—</dd>
+              </div>
+              <div>
+                <dt>Next-year rent growth</dt>
+                <dd id="metric-growth">—</dd>
+              </div>
+              <div>
+                <dt>Metro model slope</dt>
+                <dd id="metric-slope">—</dd>
+              </div>
+            </dl>
+
+            <div class="chart-heading">
+              <h4>Do the words move first?</h4>
+              <p>Aligned yearly curves for the selected ZIP.</p>
+            </div>
+            <svg
+              id="twin-chart"
+              viewBox="0 0 520 360"
+              role="img"
+              aria-labelledby="chart-title chart-description"
+            >
+              <title id="chart-title">Yelp language and rent growth over time</title>
+              <desc id="chart-description">
+                Two aligned line charts show the Yelp language PCA score and
+                next-year rent growth for the selected ZIP.
+              </desc>
+            </svg>
+          </aside>
+        </div>
+
+        <footer class="method-note">
+          <p>
+            <strong>How to read this.</strong> The map shows PC1 from 30
+            standardized keyword frequencies; its units are relative, not a
+            probability. “Next-year rent growth” pairs reviews in year
+            <em>t</em> with Zillow ZORI growth in <em>t + 1</em>. Metro slopes
+            are controlled OLS estimates per 10-percentage-point increase in
+            gentrification-associated business share; they differ jointly
+            (<span id="joint-p">p = —</span>) but are not causal estimates.
+          </p>
+          <p id="data-note">Loading source note…</p>
+        </footer>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <p>
+        P1 working interactive · Yelp Academic Dataset + Zillow ZORI ·
+        2020 Census ZCTA boundaries
+      </p>
+    </footer>
+
+    <noscript>
+      <p class="noscript">
+        This interactive requires JavaScript to render the map and ZIP-level
+        charts.
+      </p>
+    </noscript>
+  </body>
+</html>
