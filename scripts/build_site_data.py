@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build the static P1 site extracts from the committed analysis CSV.
+"""Build all static site extracts from the committed analysis CSV.
 
 The script derives the PCA language score exactly as the final analysis notebook
-does, refits the preregistered H2 interaction model, and joins each ZIP to a
-compact 2020 Census ZCTA boundary. It is the single source for every number
-shown in the P1 interactive.
+does, refits the three final-analysis models, derives the lexicon and editorial
+hook data, and joins each ZIP to a compact 2020 Census ZCTA boundary. It is the
+single source for every number shown in the interactive essay.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from scipy import stats as scipy_stats
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +45,9 @@ METRO_LABELS = {
 
 EXPECTED_YEARS = list(range(2015, 2023))
 EXPECTED_METROS = list(METRO_LABELS)
+HOOK_ZIP = "46037"
+HOOK_BEFORE_YEAR = 2019
+HOOK_SIGNAL_YEAR = 2020
 
 # The committed CSV contains two cross-metro merge duplicates. In each case the
 # numeric row is byte-for-byte identical apart from `metro`, and the canonical
@@ -165,6 +169,8 @@ def load_panel() -> pd.DataFrame:
     df["log_total_reviews"] = np.log1p(df["total_reviews"])
     df.attrs["source_row_count"] = source_row_count
     df.attrs["removed_duplicate_rows"] = removed_rows
+    df.attrs["keyword_columns"] = keyword_columns
+    df.attrs["pc1_loadings"] = pc1_loadings
     df.attrs["pc1_variance_pct"] = (
         singular_values[0] ** 2 / np.sum(singular_values**2) * 100
     )
@@ -256,7 +262,9 @@ def load_or_fetch_geometry(
     return geometry
 
 
-def fit_metro_slopes(df: pd.DataFrame) -> tuple[dict[str, float], float]:
+def fit_metro_slopes(
+    df: pd.DataFrame,
+) -> tuple[dict[str, float], float, float]:
     model = smf.ols(
         "next_year_rent_yoy_change ~ gentrify_density * C(metro) "
         "+ avg_rent + log_total_reviews + C(year)",
@@ -277,7 +285,139 @@ def fit_metro_slopes(df: pd.DataFrame) -> tuple[dict[str, float], float]:
     for row_index, term in enumerate(interaction_terms):
         restriction[row_index, model.params.index.get_loc(term)] = 1.0
     joint_test = model.f_test(restriction)
-    return slopes, float(joint_test.pvalue)
+    return slopes, float(joint_test.fvalue), float(joint_test.pvalue)
+
+
+def fit_study_models(df: pd.DataFrame) -> dict[str, Any]:
+    h1_model = smf.ols(
+        "next_year_rent_yoy_change ~ gentrify_pca_score "
+        "+ avg_rent + log_total_reviews + C(metro) + C(year)",
+        data=df,
+    ).fit(cov_type="HC3")
+    h1_parameter = "gentrify_pca_score"
+    h1_beta = float(h1_model.params[h1_parameter])
+    h1_t_statistic = h1_beta / float(h1_model.bse[h1_parameter])
+    h1_one_sided_p = float(
+        scipy_stats.t.sf(h1_t_statistic, h1_model.df_resid)
+    )
+    score_sd = float(df["gentrify_pca_score"].std())
+
+    fixed_effects_model = smf.ols(
+        "next_year_rent_yoy_change ~ C(metro) + C(year)",
+        data=df,
+    ).fit(cov_type="HC3")
+
+    h3_frame = df.copy()
+    h3_frame["language_quartile"] = pd.qcut(
+        h3_frame["gentrify_language_score"],
+        q=4,
+        labels=["Q1", "Q2", "Q3", "Q4"],
+    )
+    h3_model = smf.ols(
+        "next_year_rent_yoy_change ~ "
+        "C(language_quartile, Treatment('Q1')) "
+        "+ avg_rent + log_total_reviews + avg_price_range "
+        "+ C(metro) + C(year)",
+        data=h3_frame,
+    ).fit(cov_type="HC3")
+    h3_parameter = "C(language_quartile, Treatment('Q1'))[T.Q4]"
+
+    baseline = df[df["year"] <= 2019]["next_year_rent_yoy_change"].mean()
+    covid_period = df[df["year"].isin([2020, 2021])][
+        "next_year_rent_yoy_change"
+    ].mean()
+
+    return {
+        "h1": {
+            "beta": json_number(h1_beta, 4),
+            "hc3Se": json_number(h1_model.bse[h1_parameter], 4),
+            "oneSidedP": json_number(h1_one_sided_p, 4),
+            "effectPerSd": json_number(h1_beta * score_sd, 3),
+            "rSquared": json_number(h1_model.rsquared, 3),
+            "n": int(h1_model.nobs),
+        },
+        "h3": {
+            "q4VsQ1": json_number(h3_model.params[h3_parameter], 3),
+            "twoSidedP": json_number(h3_model.pvalues[h3_parameter], 4),
+            "n": int(h3_model.nobs),
+        },
+        "context": {
+            "meanRentGrowth": json_number(
+                df["next_year_rent_yoy_change"].mean(), 2
+            ),
+            "rentGrowthSd": json_number(
+                df["next_year_rent_yoy_change"].std(), 2
+            ),
+            "fixedEffectsRSquared": json_number(
+                fixed_effects_model.rsquared, 3
+            ),
+            "preCovidMeanGrowth": json_number(baseline, 2),
+            "covidPeriodMeanGrowth": json_number(covid_period, 2),
+        },
+    }
+
+
+def build_lexicon(df: pd.DataFrame) -> list[dict[str, Any]]:
+    keyword_columns = df.attrs["keyword_columns"]
+    loadings = df.attrs["pc1_loadings"]
+    total_reviews = float(df["total_reviews"].sum())
+    lexicon: list[dict[str, Any]] = []
+
+    for frequency_column, loading in zip(keyword_columns, loadings):
+        stem = frequency_column[len("kw_") : -len("_freq")]
+        count_column = f"kw_{stem}_count"
+        if count_column not in df.columns:
+            raise ValueError(f"Missing keyword count column: {count_column}")
+        lexicon.append(
+            {
+                "word": stem.replace("_", " "),
+                "loading": json_number(loading, 4),
+                "nextYearCorrelation": json_number(
+                    df[frequency_column].corr(
+                        df["next_year_rent_yoy_change"]
+                    ),
+                    4,
+                ),
+                "mentionsPer1kReviews": json_number(
+                    df[count_column].sum() / total_reviews * 1000,
+                    2,
+                ),
+            }
+        )
+
+    return sorted(lexicon, key=lambda item: item["loading"], reverse=True)
+
+
+def build_hook(df: pd.DataFrame) -> dict[str, Any]:
+    hook_rows = df[df["postal_code"] == HOOK_ZIP].set_index("year")
+    required_years = {HOOK_BEFORE_YEAR, HOOK_SIGNAL_YEAR}
+    if not required_years.issubset(hook_rows.index):
+        raise ValueError(
+            f"Hook ZIP {HOOK_ZIP} is missing required years {required_years}"
+        )
+    before = hook_rows.loc[HOOK_BEFORE_YEAR]
+    signal = hook_rows.loc[HOOK_SIGNAL_YEAR]
+    return {
+        "zip": HOOK_ZIP,
+        "metro": METRO_LABELS[str(signal["metro"])],
+        "beforeYear": HOOK_BEFORE_YEAR,
+        "signalYear": HOOK_SIGNAL_YEAR,
+        "scoreBefore": json_number(before["gentrify_pca_score"], 2),
+        "scoreAfter": json_number(signal["gentrify_pca_score"], 2),
+        "scoreDelta": json_number(
+            signal["gentrify_pca_score"]
+            - before["gentrify_pca_score"],
+            2,
+        ),
+        "growthBefore": json_number(
+            before["next_year_rent_yoy_change"], 2
+        ),
+        "growthAfter": json_number(
+            signal["next_year_rent_yoy_change"], 2
+        ),
+        "reviewsBefore": int(before["total_reviews"]),
+        "reviewsAfter": int(signal["total_reviews"]),
+    }
 
 
 def build_extracts(
@@ -292,7 +432,8 @@ def build_extracts(
     if df.groupby("postal_code")["metro"].nunique().max() != 1:
         raise ValueError("At least one ZIP is assigned to multiple metros")
 
-    slopes, h2_joint_p = fit_metro_slopes(df)
+    slopes, h2_joint_f, h2_joint_p = fit_metro_slopes(df)
+    study_models = fit_study_models(df)
     score_low, score_high = np.quantile(
         df["gentrify_pca_score"].to_numpy(), [0.05, 0.95]
     )
@@ -369,8 +510,12 @@ def build_extracts(
                 json_number(score_low, 3),
                 json_number(score_high, 3),
             ],
+            "h2JointF": json_number(h2_joint_f, 4),
             "h2JointP": json_number(h2_joint_p, 4),
         },
+        "hook": build_hook(df),
+        "lexicon": build_lexicon(df),
+        "study": study_models,
         "metros": metro_payload,
         "zips": zip_payload,
     }

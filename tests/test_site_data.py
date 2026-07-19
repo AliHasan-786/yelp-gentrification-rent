@@ -30,6 +30,7 @@ class SiteDataTest(unittest.TestCase):
         self.assertEqual(self.panel["meta"]["zipCount"], 238)
         self.assertEqual(self.panel["meta"]["years"], list(range(2015, 2023)))
         self.assertEqual(self.panel["meta"]["pc1VariancePct"], 13.5)
+        self.assertEqual(self.panel["meta"]["h2JointF"], 2.7024)
         self.assertEqual(self.panel["meta"]["h2JointP"], 0.0293)
         self.assertEqual(
             self.panel["meta"]["metroCorrections"],
@@ -44,6 +45,42 @@ class SiteDataTest(unittest.TestCase):
                 "Philadelphia",
                 "Tampa Bay",
             ],
+        )
+        self.assertEqual(len(self.panel["lexicon"]), 30)
+        self.assertEqual(
+            self.panel["hook"],
+            {
+                "zip": "46037",
+                "metro": "Indianapolis",
+                "beforeYear": 2019,
+                "signalYear": 2020,
+                "scoreBefore": -0.11,
+                "scoreAfter": 1.63,
+                "scoreDelta": 1.75,
+                "growthBefore": 3.2,
+                "growthAfter": 10.66,
+                "reviewsBefore": 637,
+                "reviewsAfter": 1168,
+            },
+        )
+        self.assertEqual(
+            self.panel["study"]["h1"],
+            {
+                "beta": 0.1373,
+                "hc3Se": 0.0454,
+                "oneSidedP": 0.0013,
+                "effectPerSd": 0.276,
+                "rSquared": 0.666,
+                "n": 1105,
+            },
+        )
+        self.assertEqual(
+            self.panel["study"]["h3"],
+            {
+                "q4VsQ1": 0.357,
+                "twoSidedP": 0.2308,
+                "n": 1102,
+            },
         )
 
     def test_panel_and_geometry_zip_sets_match(self):

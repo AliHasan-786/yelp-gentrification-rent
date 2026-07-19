@@ -33,9 +33,60 @@
     </header>
 
     <main>
+      <section class="hook section-shell" id="story" aria-labelledby="story-title">
+        <header class="section-heading">
+          <p class="section-number">01 / A ZIP-sized clue</p>
+          <h2 id="story-title">The words shifted. Rent moved next.</h2>
+          <p>
+            One ZIP shows the sequence this project tests across the full
+            panel. It is an opening clue—not proof on its own.
+          </p>
+        </header>
+
+        <div class="hook-grid">
+          <article class="hook-story">
+            <p class="label" id="hook-location">ZIP — · —</p>
+            <h3>
+              Between <span id="hook-before-year">—</span> and
+              <span id="hook-signal-year">—</span>, its Yelp vocabulary score
+              climbed <span id="hook-score-delta">—</span> points.
+            </h3>
+            <p>
+              The associated next-year rent-growth measure then moved from
+              <strong id="hook-growth-before">—</strong> to
+              <strong id="hook-growth-after">—</strong>. The site’s central
+              question is whether that ordering survives beyond one ZIP after
+              accounting for where and when each observation occurred.
+            </p>
+            <a class="text-link" href="#explorer">Explore the full map ↓</a>
+          </article>
+
+          <div class="hook-sequence" aria-label="Hook data sequence">
+            <article>
+              <p class="label">Yelp language PC1</p>
+              <div class="sequence-values">
+                <span id="hook-score-before">—</span>
+                <i aria-hidden="true">→</i>
+                <strong id="hook-score-after">—</strong>
+              </div>
+              <p id="hook-review-note">Loading review counts…</p>
+            </article>
+            <article>
+              <p class="label">Next-year rent growth</p>
+              <div class="sequence-values">
+                <span id="hook-rent-before">—</span>
+                <i aria-hidden="true">→</i>
+                <strong id="hook-rent-after">—</strong>
+              </div>
+              <p>Reviews in year <em>t</em>; rent growth measured in <em>t + 1</em>.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section class="explorer" id="explorer" aria-labelledby="explorer-title">
         <header class="section-heading">
-          <p class="section-number">01 / The map</p>
+          <p class="section-number">02 / The map</p>
           <h2 id="explorer-title">One score. Five different housing markets.</h2>
           <p>
             Pick a metro and year, then select a ZIP to compare its Yelp
@@ -159,12 +210,184 @@
           <p id="data-note">Loading source note…</p>
         </footer>
       </section>
+
+      <section class="lexicon section-shell" id="lexicon" aria-labelledby="lexicon-title">
+        <header class="section-heading">
+          <p class="section-number">03 / The lexicon</p>
+          <h2 id="lexicon-title">Which words move together?</h2>
+          <p>
+            PCA does not decide which word “predicts” rent. It finds the
+            vocabulary that co-moves across ZIP-years. Re-rank all 30 terms to
+            see the distinction.
+          </p>
+        </header>
+
+        <div class="lexicon-controls" role="group" aria-label="Rank keywords by">
+          <button type="button" data-lexicon-sort="loading" aria-pressed="true">
+            PC1 loading
+          </button>
+          <button type="button" data-lexicon-sort="correlation" aria-pressed="false">
+            Next-year correlation
+          </button>
+          <button type="button" data-lexicon-sort="frequency" aria-pressed="false">
+            Review frequency
+          </button>
+        </div>
+
+        <div class="lexicon-key">
+          <p id="lexicon-description">
+            Loading shows how strongly each term contributes to the shared
+            vocabulary axis.
+          </p>
+          <p id="lexicon-count">30 terms</p>
+        </div>
+        <ol class="lexicon-list" id="lexicon-list"></ol>
+      </section>
+
+      <section class="strength" id="strength" aria-labelledby="strength-title">
+        <div class="strength-inner">
+          <header class="section-heading">
+            <p class="section-number">04 / How strong is this, really?</p>
+            <h2 id="strength-title">A real signal. A modest one.</h2>
+            <p>
+              The language score adds information after the controls. It does
+              not dominate the housing market, and the visual scale should not
+              pretend otherwise.
+            </p>
+          </header>
+
+          <div class="effect-visual" aria-label="Effect size compared with mean rent growth">
+            <div class="effect-row">
+              <div>
+                <p>Mean next-year rent growth</p>
+                <strong id="mean-growth-label">—</strong>
+              </div>
+              <span class="effect-track">
+                <i class="effect-bar effect-bar-mean" id="mean-growth-bar"></i>
+              </span>
+            </div>
+            <div class="effect-row">
+              <div>
+                <p>Added growth per +1 SD PC1</p>
+                <strong id="effect-label">—</strong>
+              </div>
+              <span class="effect-track">
+                <i class="effect-bar effect-bar-score" id="effect-bar"></i>
+              </span>
+            </div>
+            <p class="effect-caption" id="effect-caption">Loading comparison…</p>
+          </div>
+
+          <div class="rigor-grid">
+            <article>
+              <p class="label">What PC1 captures</p>
+              <strong id="variance-stat">—</strong>
+              <p>
+                of variance across the 30 keyword frequencies. It is the
+                largest component, not a complete summary of the vocabulary.
+              </p>
+            </article>
+            <article>
+              <p class="label">What fixed effects absorb</p>
+              <strong id="fixed-effects-stat">—</strong>
+              <p id="fixed-effects-copy">
+                Loading the fixed-effects comparison…
+              </p>
+            </article>
+            <article>
+              <p class="label">The COVID-era shock</p>
+              <strong id="covid-stat">—</strong>
+              <p id="covid-copy">Loading the time comparison…</p>
+            </article>
+          </div>
+
+          <p class="strength-conclusion">
+            Read the finding at its measured scale: Yelp language precedes a
+            small increment in rent growth inside a model where year and metro
+            conditions do most of the explanatory work.
+          </p>
+        </div>
+      </section>
+
+      <section class="methods section-shell" id="methods" aria-labelledby="methods-title">
+        <header class="section-heading">
+          <p class="section-number">05 / Method appendix</p>
+          <h2 id="methods-title">Preregistered questions, actual answers.</h2>
+          <p>
+            Three tests, one supported language result, one supported
+            metro-heterogeneity result, and one quartile contrast that did not
+            clear the significance threshold.
+          </p>
+        </header>
+
+        <div class="hypothesis-grid">
+          <article>
+            <p class="label">H1 · Supported</p>
+            <h3>Does PC1 positively predict next-year rent growth?</h3>
+            <p class="result-line" id="h1-result">Loading result…</p>
+            <p>
+              OLS with baseline rent, review volume, metro and year fixed
+              effects; HC3 robust standard errors; preregistered positive
+              alternative.
+            </p>
+          </article>
+          <article>
+            <p class="label">H2 · Supported</p>
+            <h3>Do business-density slopes vary by metro?</h3>
+            <p class="result-line" id="h2-result">Loading result…</p>
+            <p>
+              OLS interaction model with a joint F-test across the four
+              metro-interaction terms.
+            </p>
+          </article>
+          <article>
+            <p class="label">H3 · Not supported</p>
+            <h3>Does the top language quartile beat the bottom?</h3>
+            <p class="result-line" id="h3-result">Loading result…</p>
+            <p>
+              Controlled Q4-versus-Q1 coefficient using the original
+              equal-weight language score and HC3 robust standard errors.
+            </p>
+          </article>
+        </div>
+
+        <div class="method-details">
+          <article>
+            <p class="label">Data & provenance</p>
+            <h3>Two public datasets, joined at ZIP × year.</h3>
+            <ul>
+              <li>Yelp Academic Dataset review text and food-business metadata.</li>
+              <li>Zillow Observed Rent Index annualized from monthly ZIP-level values.</li>
+              <li>2020 Census ZCTA boundaries for the map.</li>
+              <li>Five metros, 2015–2022, with eight exact cross-metro duplicates removed before mapping.</li>
+            </ul>
+          </article>
+          <article>
+            <p class="label">What this design cannot establish</p>
+            <h3>Association, not a neighborhood-change mechanism.</h3>
+            <ul>
+              <li>Yelp reviewers are not representative of every resident.</li>
+              <li>The hand-authored lexicon contains ambiguous terms such as “craft.”</li>
+              <li>Business metadata is a static snapshot without opening dates.</li>
+              <li>Year fixed effects absorb shared shocks but not every local confounder.</li>
+              <li>ZORI smoothing can mute abrupt rent changes.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="source-links" aria-label="Source and reproduction links">
+          <a href="https://github.com/AliHasan-786/yelp-gentrification-rent/blob/main/notebooks/phase1_data_collection.ipynb">Cleaning notebook ↗</a>
+          <a href="https://github.com/AliHasan-786/yelp-gentrification-rent/blob/main/notebooks/phase2_eda.ipynb">EDA notebook ↗</a>
+          <a href="https://github.com/AliHasan-786/yelp-gentrification-rent/blob/main/notebooks/phase3_hypothesis_testing.ipynb">Final analysis ↗</a>
+          <a href="https://github.com/AliHasan-786/yelp-gentrification-rent">Source & reproduction ↗</a>
+        </div>
+      </section>
     </main>
 
     <footer class="page-footer">
       <p>
-        P1 working interactive · Yelp Academic Dataset + Zillow ZORI ·
-        2020 Census ZCTA boundaries
+        The Brunch Index · Yelp Academic Dataset + Zillow ZORI ·
+        2020 Census ZCTA boundaries · Built by Ali Hasan
       </p>
     </footer>
 

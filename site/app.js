@@ -17,6 +17,7 @@ const state = {
   metro: "Philly MSA",
   year: 2021,
   selectedZip: null,
+  lexiconSort: "loading",
 };
 
 const elements = {
@@ -39,6 +40,33 @@ const elements = {
   headerRows: document.querySelector("#header-rows"),
   headerZips: document.querySelector("#header-zips"),
   headerMetros: document.querySelector("#header-metros"),
+  hookLocation: document.querySelector("#hook-location"),
+  hookBeforeYear: document.querySelector("#hook-before-year"),
+  hookSignalYear: document.querySelector("#hook-signal-year"),
+  hookScoreDelta: document.querySelector("#hook-score-delta"),
+  hookGrowthBefore: document.querySelector("#hook-growth-before"),
+  hookGrowthAfter: document.querySelector("#hook-growth-after"),
+  hookScoreBefore: document.querySelector("#hook-score-before"),
+  hookScoreAfter: document.querySelector("#hook-score-after"),
+  hookRentBefore: document.querySelector("#hook-rent-before"),
+  hookRentAfter: document.querySelector("#hook-rent-after"),
+  hookReviewNote: document.querySelector("#hook-review-note"),
+  lexiconList: document.querySelector("#lexicon-list"),
+  lexiconDescription: document.querySelector("#lexicon-description"),
+  lexiconCount: document.querySelector("#lexicon-count"),
+  lexiconButtons: document.querySelectorAll("[data-lexicon-sort]"),
+  meanGrowthLabel: document.querySelector("#mean-growth-label"),
+  effectLabel: document.querySelector("#effect-label"),
+  effectBar: document.querySelector("#effect-bar"),
+  effectCaption: document.querySelector("#effect-caption"),
+  varianceStat: document.querySelector("#variance-stat"),
+  fixedEffectsStat: document.querySelector("#fixed-effects-stat"),
+  fixedEffectsCopy: document.querySelector("#fixed-effects-copy"),
+  covidStat: document.querySelector("#covid-stat"),
+  covidCopy: document.querySelector("#covid-copy"),
+  h1Result: document.querySelector("#h1-result"),
+  h2Result: document.querySelector("#h2-result"),
+  h3Result: document.querySelector("#h3-result"),
 };
 
 function createSvgElement(name, attributes = {}) {
@@ -66,6 +94,129 @@ function signed(value, digits = 2) {
 function pValue(value) {
   if (value == null) return "p = —";
   return `p = ${value.toFixed(4).replace(/^0/, "")}`;
+}
+
+function renderHook() {
+  const hook = state.panel.hook;
+  elements.hookLocation.textContent = `ZIP ${hook.zip} · ${hook.metro}`;
+  elements.hookBeforeYear.textContent = hook.beforeYear;
+  elements.hookSignalYear.textContent = hook.signalYear;
+  elements.hookScoreDelta.textContent = signed(hook.scoreDelta, 2);
+  elements.hookGrowthBefore.textContent = `${hook.growthBefore.toFixed(2)}%`;
+  elements.hookGrowthAfter.textContent = `${hook.growthAfter.toFixed(2)}%`;
+  elements.hookScoreBefore.textContent = signed(hook.scoreBefore, 2);
+  elements.hookScoreAfter.textContent = signed(hook.scoreAfter, 2);
+  elements.hookRentBefore.textContent = `${hook.growthBefore.toFixed(2)}%`;
+  elements.hookRentAfter.textContent = `${hook.growthAfter.toFixed(2)}%`;
+  elements.hookReviewNote.textContent =
+    `${hook.reviewsBefore.toLocaleString()} reviews in ${hook.beforeYear}; ` +
+    `${hook.reviewsAfter.toLocaleString()} in ${hook.signalYear}.`;
+}
+
+const LEXICON_CONFIG = {
+  loading: {
+    field: "loading",
+    description:
+      "Loading shows how strongly each term contributes to the shared PC1 vocabulary axis.",
+    format: (value) => value.toFixed(3),
+    compare: (left, right) => right.loading - left.loading,
+  },
+  correlation: {
+    field: "nextYearCorrelation",
+    description:
+      "Correlation is the raw, uncontrolled relationship between a term’s frequency and next-year rent growth.",
+    format: (value) => signed(value, 3),
+    compare: (left, right) =>
+      right.nextYearCorrelation - left.nextYearCorrelation,
+  },
+  frequency: {
+    field: "mentionsPer1kReviews",
+    description:
+      "Frequency counts keyword mentions per 1,000 retained reviews in the corrected mapping panel.",
+    format: (value) => `${value.toFixed(2)} / 1k`,
+    compare: (left, right) =>
+      right.mentionsPer1kReviews - left.mentionsPer1kReviews,
+  },
+};
+
+function renderLexicon() {
+  const config = LEXICON_CONFIG[state.lexiconSort];
+  const sorted = [...state.panel.lexicon].sort(config.compare);
+  const maximum = Math.max(
+    ...sorted.map((item) => Math.abs(item[config.field])),
+  );
+
+  elements.lexiconList.replaceChildren();
+  sorted.forEach((item) => {
+    const value = item[config.field];
+    const listItem = document.createElement("li");
+    listItem.className = "lexicon-item";
+
+    const word = document.createElement("span");
+    word.className = "lexicon-word";
+    word.textContent = item.word;
+
+    const track = document.createElement("span");
+    track.className = "lexicon-bar-track";
+    track.setAttribute("aria-hidden", "true");
+    const bar = document.createElement("i");
+    bar.className = `lexicon-bar${value < 0 ? " is-negative" : ""}`;
+    bar.style.width = `${Math.max(0.6, Math.abs(value) / maximum * 100)}%`;
+    track.append(bar);
+
+    const valueLabel = document.createElement("span");
+    valueLabel.className = "lexicon-value";
+    valueLabel.textContent = config.format(value);
+
+    listItem.append(word, track, valueLabel);
+    elements.lexiconList.append(listItem);
+  });
+
+  elements.lexiconDescription.textContent = config.description;
+  elements.lexiconCount.textContent = `${sorted.length} terms`;
+  elements.lexiconButtons.forEach((button) => {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.lexiconSort === state.lexiconSort),
+    );
+  });
+}
+
+function renderStrengthAndMethods() {
+  const { h1, h3, context } = state.panel.study;
+  const effectRatio = h1.effectPerSd / context.meanRentGrowth * 100;
+
+  elements.meanGrowthLabel.textContent =
+    `${context.meanRentGrowth.toFixed(2)}%`;
+  elements.effectLabel.textContent = `${signed(h1.effectPerSd, 3)} pp`;
+  elements.effectBar.style.width = `${Math.max(0.4, effectRatio)}%`;
+  elements.effectCaption.textContent =
+    `The +1 SD language-score effect is ${effectRatio.toFixed(1)}% ` +
+    "as large as the panel’s mean annual rent-growth rate.";
+  elements.varianceStat.textContent =
+    `${state.panel.meta.pc1VariancePct.toFixed(1)}%`;
+  elements.fixedEffectsStat.textContent =
+    `R² ${context.fixedEffectsRSquared.toFixed(3)}`;
+  elements.fixedEffectsCopy.textContent =
+    `Metro and year fixed effects alone reach R² ` +
+    `${context.fixedEffectsRSquared.toFixed(3)}; the full H1 model reaches ` +
+    `${h1.rSquared.toFixed(3)}. Most model fit comes from place and time.`;
+  elements.covidStat.textContent =
+    `${context.covidPeriodMeanGrowth.toFixed(2)}%`;
+  elements.covidCopy.textContent =
+    `Mean next-year growth in 2020–21, versus ` +
+    `${context.preCovidMeanGrowth.toFixed(2)}% across 2015–19. Year effects ` +
+    "keep that shared shock from masquerading as vocabulary signal.";
+
+  elements.h1Result.textContent =
+    `β = ${h1.beta.toFixed(4)} · HC3 SE = ${h1.hc3Se.toFixed(4)} · ` +
+    `${pValue(h1.oneSidedP)} · N = ${h1.n.toLocaleString()}`;
+  elements.h2Result.textContent =
+    `Joint F = ${state.panel.meta.h2JointF.toFixed(4)} · ` +
+    `${pValue(state.panel.meta.h2JointP)} · corrected mapping panel`;
+  elements.h3Result.textContent =
+    `Q4 − Q1 = ${signed(h3.q4VsQ1, 3)} pp · ` +
+    `${pValue(h3.twoSidedP)} · N = ${h3.n.toLocaleString()}`;
 }
 
 function scoreColor(score) {
@@ -463,7 +614,21 @@ async function initialize() {
       `exact cross-metro duplicates are removed before mapping, leaving ` +
       `${state.panel.meta.mappedRows.toLocaleString()} ZIP-years. PC1 explains ` +
       `${state.panel.meta.pc1VariancePct.toFixed(1)}% of keyword variance.`;
+    elements.lexiconButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        state.lexiconSort = button.dataset.lexiconSort;
+        renderLexicon();
+      });
+    });
+    renderHook();
+    renderLexicon();
+    renderStrengthAndMethods();
     render();
+    if (window.location.hash) {
+      requestAnimationFrame(() => {
+        document.querySelector(window.location.hash)?.scrollIntoView();
+      });
+    }
   } catch (error) {
     console.error(error);
     document.querySelector("#explorer").innerHTML = `
