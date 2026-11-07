@@ -106,6 +106,10 @@ Python · pandas · NumPy/scikit-learn (PCA) · SciPy · statsmodels (OLS/WLS) �
 
 `EXPLAINER.md` is the private-facing study guide for understanding and defending the implementation. The inert CI workflow and activation instructions live in `docs/ci/`.
 
+Public numbers and wording are frozen in `docs/CLAIMS_LEDGER.md`. Portfolio
+integration metadata lives in `portfolio.json`; its `demoUrl` remains blank
+until the coordinator-reviewed deployment is completed.
+
 ## Course
 
 DS 5304 — Foundations of Data Science (Spring 2026)

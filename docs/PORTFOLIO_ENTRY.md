@@ -6,4 +6,10 @@ An interactive data essay testing whether gentrification-coded language in Yelp 
 
 **Skills:** product framing · deterministic data pipelines · PCA · fixed effects · robust inference · accessible SVG · responsive data visualization · research transparency
 
+**Role:** Course team member (H3 analysis); interactive extension and release preparation
+
+**Primary metric:** +0.276 percentage points per +1 SD PC1 on the corrected 1,105-ZIP-year panel
+
+**Thumbnail:** `site/assets/the-brunch-index-thumbnail.png`
+
 **Links after publication:** Live interactive · Source repository

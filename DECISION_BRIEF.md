@@ -1,62 +1,110 @@
-# Decision brief — P2 publication gate
+# Decision brief — P2 release candidate
 
-**Project:** The Brunch Index  
-**Date:** 2026-07-19  
-**Governing spec:** `/Users/alihasan/Documents/Codex/project-specs/SPEC_YELP_INTERACTIVE.md`  
+**Project:** The Brunch Index
+
+**Date:** 2026-11-07
+
+**Assignment:** `yelp-release-candidate-1`
+
+**Governing spec:** `/Users/alihasan/Documents/Codex/project-specs/SPEC_YELP_INTERACTIVE.md`
+
 **Repo:** `/Users/alihasan/Documents/Codex/2026-07-18/read-strategy-handoff-md-and-readme/yelp-gentrification-rent`
 
 ## Decision requested
 
-Ali must make the final `publish under my name` decision. Please review the prose voice and approve or decline both public actions:
+The portfolio coordinator should inspect and accept or return this release
+candidate. On acceptance, the next milestone is to push the local P2 commits,
+deploy `site/` to Vercel, verify production performance and links, and replace
+the existing `yelp-rent` hub placeholder with the reviewed metadata and live
+URL.
 
-1. Deploy `site/` to Vercel as the production interactive.
-2. Push the P2 repository changes and add the live/source cross-link to the public portfolio at `/Users/alihasan/Downloads/Career Directory/portfolio-site`.
+Ali's 2026-11-07 standing authorization covers routine pushes and portfolio
+deployments after checks and coordinator review. No additional conversational
+publication approval is required. This assignment itself stops at the local
+release candidate, so no push, deployment, or hub edit has been made here.
 
-No deployment, public repository push, or portfolio mutation has been made for P2.
-
-## What is ready
+## Release set
 
 - Opening ZIP story grounded in generated panel values.
-- Existing five-metro choropleth, year slider, keyboard-accessible ZIP selection, and twin curves.
-- Interactive 30-term lexicon sortable by PCA loading, raw next-year correlation, and review frequency.
-- Effect-size panel comparing the generated `+0.276 pp` estimate with `6.70%` mean growth, plus the `13.5%` PCA, COVID-period, and fixed-effects context.
-- Method appendix with H1–H3 results, limitations, provenance, and live notebook links.
-- Deterministic generator for all displayed numbers, a human-readable pipeline notebook, regression tests, pinned dependencies, inert CI workflow, and an interview explainer.
-- Portfolio copy is drafted at `docs/PORTFOLIO_ENTRY.md`; the live URL remains intentionally blank until deployment.
+- Five-metro choropleth, 2015–2022 slider, keyboard-accessible ZIP selection,
+  and twin language/rent curves.
+- Interactive 30-term lexicon sortable by PCA loading, raw next-year
+  correlation, and review frequency.
+- Effect-size panel comparing `+0.276 pp` with `6.70%` mean growth, plus the
+  `13.5%` PCA, COVID-period, and fixed-effects context.
+- Method appendix with H1–H3 results, limitations, provenance, and notebook
+  links.
+- Deterministic generator, executable pipeline notebook, regression tests,
+  pinned dependencies, inert CI workflow, and Ali-facing explainer.
+- Public-safe integration metadata at `portfolio.json`.
+- Representative 1200 x 630 thumbnail at
+  `site/assets/the-brunch-index-thumbnail.png`.
+- Course-versus-corrected metric provenance at `docs/CLAIMS_LEDGER.md`.
 
-## Evidence opened and verified
+## Evidence verified on 2026-11-07
 
 - `python3 scripts/build_site_data.py` regenerated both extracts byte-for-byte:
   - `panel.json`: `f1f96c4aac4f62a6c6ff4ccdb140153bdc7b99ba1d7ece6ace65235b1c36bb49`
   - `zcta.geojson`: `bcd2a843b1366e48e84d74be509188de38f0633cc28c961351dad8c6a27bf68a`
-- `python3 -m unittest discover -s tests -v`: 7/7 passing.
-- `/opt/anaconda3` Python 3.8 notebook kernel executed `notebooks/site_data_pipeline.ipynb` successfully.
-- `node --check site/app.js`, `jq empty`, and `git diff --check` passed.
-- Browser QA at 1440 px and 390 px: no horizontal overflow, no console warnings/errors, working lexicon sorting and section deep links.
-- Local mobile-sized navigation load: 72 ms; static payload is about 657 KiB.
-- All four GitHub/notebook links and the Yelp dataset link returned HTTP 200.
-- Public-copy scans found no stale metros, causal claims, gradients, credential strings, or common secret patterns.
+- `python3 -m unittest discover -s tests -v`: 8/8 passing.
+- `notebooks/site_data_pipeline.ipynb` executed successfully with `nbconvert`.
+- `node --check site/app.js`, JSON parsing, and `git diff --check` passed.
+- Desktop and 390 px browser QA found no horizontal overflow and no console
+  warnings or errors.
+- Metro selection, year-slider state, ZIP detail rendering, deep links, and all
+  three lexicon sort modes were exercised successfully.
+- Local 390 px navigation load was 9 ms. The static site payload remains about
+  657 KiB; the spec's `<2s` requirement still needs production verification.
 
-## Editorial and analytical choices to review
+## Claims to preserve
 
-- Hook: ZIP `46037` in Indianapolis moves from PC1 `-0.11` in 2019 to `+1.63` in 2020; its next-year rent-growth measure moves from `3.20%` to `10.66%`. It is framed as an opening observation, not a representative case or causal example.
-- Headline tone: “A real signal. A modest one.” The panel presents statistical reliability without implying practical dominance.
-- Corrected public panel: eight exact cross-metro duplicate assignments are removed, leaving 1,105 ZIP-years. The original 1,113-row course notebook remains linked and its original statistics remain documented.
-- H1/H2 are described as supported under the specified models; H3 is visibly reported as not supported.
+- Correct metro list: Indianapolis, Nashville, New Orleans, Philadelphia, and
+  Tampa Bay.
+- The submitted course notebook is the original 1,113-row record: H1 beta
+  `0.1366`, H2 p `0.0231`, H3 p `0.2075`.
+- The public interactive removes eight exact duplicate metro assignments and
+  reports corrected-panel results on 1,105 ZIP-years: H1 beta `0.1373`, H1
+  one-sided p `0.0013`, H2 p `0.0293`, and H3 p `0.2308`.
+- The analysis is observational. Public language may say **associated with**,
+  **predicts**, or **precedes**, never that Yelp language causes rent growth.
 
-## Remaining risks
+## Final prose for review
 
-- The `<2s` result is verified locally, not from a real mobile network. Production performance must be checked after Vercel deployment.
-- The hook is illustrative and selected for narrative clarity; the copy explicitly avoids treating it as causal proof.
-- The analysis remains observational, limited to five Yelp metros, and based on a first component explaining 13.5% of keyword variance.
-- The automated Claude gate reviewer was not invoked because `/Users/alihasan/Documents/Codex/project-specs/gates/STOP` is present. This personal publication gate requires Ali’s own words regardless.
+**Title:** The Brunch Index
 
-## Acceptance coverage
+**One-line description:** Interactive data essay on whether Yelp language
+precedes next-year ZIP-level rent growth across five metros.
 
-- README/site metros and numbers agree: generated values plus regression tests.
-- Under 2 seconds on mobile: local browser QA passed; production check remains after approval.
-- One script regenerates every chart number: `scripts/build_site_data.py`.
-- Modest effect shown without hedging or inflation: dedicated strength panel.
-- No causal claim: automated public-copy test plus repository scan.
-- P2 deployment and portfolio cross-link: deliberately waiting on this gate.
+**Primary metric:** +0.276 pp per +1 SD PC1 on the corrected
+1,105-ZIP-year panel.
 
+**Portfolio paragraph:** An interactive data essay testing whether
+gentrification-coded language in Yelp restaurant reviews precedes next-year
+ZIP-level rent growth across Indianapolis, Nashville, New Orleans,
+Philadelphia, and Tampa Bay. The deterministic Python pipeline reconstructs a
+30-keyword PCA score, refits fixed-effects models with HC3 robust inference,
+validates Census ZIP geometry, and powers a dependency-free choropleth, ZIP
+drill-down, lexicon explorer, and effect-size explainer. The corrected
+1,105-row mapping panel finds a statistically reliable but modest association:
+about +0.276 percentage points per score standard deviation against a 6.70%
+mean, with the COVID-era shock, non-significant quartile result, and limits of
+observational evidence shown directly.
+
+## Remaining release risks
+
+- Production `<2s` mobile performance and public links cannot be verified until
+  deployment.
+- The opening ZIP is illustrative, not representative or causal.
+- The analysis covers five Yelp metros and PC1 explains 13.5% of keyword
+  variance.
+- Provider authentication or an app-enforced runtime prompt could still block
+  a release command; it must be reported rather than bypassed.
+- The stopped reviewer-loop automation remains out of scope and must not be
+  invoked.
+
+## Recommendation
+
+Accept the copy and local release assets as the P2 candidate. Proceed to the
+bounded release milestone under standing authorization, then update
+`portfolio.json.demoUrl`, production-check the site, and hand the verified live
+URL plus metadata to the hub owner.

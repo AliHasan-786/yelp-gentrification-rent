@@ -1,0 +1,22 @@
+{
+  "id": "yelp-rent",
+  "title": "The Brunch Index",
+  "course": "DS 5304 — Foundations of Data Science",
+  "semester": "Spring 2026",
+  "oneLine": "Interactive data essay on whether Yelp language precedes next-year ZIP-level rent growth across five metros.",
+  "themes": [
+    "urban data science",
+    "research transparency",
+    "interactive visualization"
+  ],
+  "role": "Course team member (H3 analysis); interactive extension and release preparation",
+  "status": "release-candidate",
+  "primaryMetric": "+0.276 pp per +1 SD PC1 on the corrected 1,105-ZIP-year panel",
+  "demoUrl": "",
+  "repoUrl": "https://github.com/AliHasan-786/yelp-gentrification-rent",
+  "writeupUrl": "https://github.com/AliHasan-786/yelp-gentrification-rent#readme",
+  "thumbnail": "site/assets/the-brunch-index-thumbnail.png",
+  "featured": true,
+  "evidenceStage": "observational analysis",
+  "resultScope": "Indianapolis, Nashville, New Orleans, Philadelphia, and Tampa Bay; 2015–2022"
+}

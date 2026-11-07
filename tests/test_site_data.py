@@ -139,6 +139,7 @@ class SiteDataTest(unittest.TestCase):
             [
                 (ROOT / "README.md").read_text(encoding="utf-8"),
                 (ROOT / "site" / "index.html").read_text(encoding="utf-8"),
+                (ROOT / "portfolio.json").read_text(encoding="utf-8"),
             ]
         ).lower()
         for phrase in (
@@ -156,6 +157,17 @@ class SiteDataTest(unittest.TestCase):
     def test_editorial_css_has_no_gradients(self):
         css = (ROOT / "site" / "styles.css").read_text(encoding="utf-8")
         self.assertNotIn("gradient(", css.lower())
+
+    def test_portfolio_release_metadata_matches_corrected_panel(self):
+        metadata = json.loads(
+            (ROOT / "portfolio.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(metadata["id"], "yelp-rent")
+        self.assertEqual(metadata["status"], "release-candidate")
+        self.assertEqual(metadata["demoUrl"], "")
+        self.assertIn("1,105", metadata["primaryMetric"])
+        self.assertIn("+0.276 pp", metadata["primaryMetric"])
+        self.assertTrue((ROOT / metadata["thumbnail"]).is_file())
 
 
 if __name__ == "__main__":
