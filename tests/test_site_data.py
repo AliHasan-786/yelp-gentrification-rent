@@ -167,8 +167,13 @@ class SiteDataTest(unittest.TestCase):
             metadata["course"],
             "INFO 5304 / CS 5304 — Data Science in the Wild",
         )
-        self.assertEqual(metadata["status"], "release-candidate")
+        self.assertEqual(metadata["status"], "release-candidate-pushed")
         self.assertEqual(metadata["demoUrl"], "")
+        self.assertEqual(
+            metadata["releaseSourceCommit"],
+            "f99156bc102f4a88cec6d38b3f9c7ddad1621a58",
+        )
+        self.assertEqual(metadata["deploymentStatus"], "blocked-vercel-auth")
         self.assertIn("1,105", metadata["primaryMetric"])
         self.assertIn("+0.276 pp", metadata["primaryMetric"])
         self.assertTrue((ROOT / metadata["thumbnail"]).is_file())

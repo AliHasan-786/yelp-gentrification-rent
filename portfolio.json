@@ -10,9 +10,11 @@
     "interactive visualization"
   ],
   "role": "Course team member (H3 analysis); interactive extension and release preparation",
-  "status": "release-candidate",
+  "status": "release-candidate-pushed",
   "primaryMetric": "+0.276 pp per +1 SD PC1 on the corrected 1,105-ZIP-year panel",
   "demoUrl": "",
+  "releaseSourceCommit": "f99156bc102f4a88cec6d38b3f9c7ddad1621a58",
+  "deploymentStatus": "blocked-vercel-auth",
   "repoUrl": "https://github.com/AliHasan-786/yelp-gentrification-rent",
   "writeupUrl": "https://github.com/AliHasan-786/yelp-gentrification-rent#readme",
   "thumbnail": "site/assets/the-brunch-index-thumbnail.png",

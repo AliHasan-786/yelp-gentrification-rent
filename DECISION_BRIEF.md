@@ -10,18 +10,18 @@
 
 **Repo:** `/Users/alihasan/Documents/Codex/2026-07-18/read-strategy-handoff-md-and-readme/yelp-gentrification-rent`
 
-## Decision requested
+## Current release state
 
-The portfolio coordinator should inspect and accept or return this release
-candidate. On acceptance, the next milestone is to push the local P2 commits,
-deploy `site/` to Vercel, verify production performance and links, and replace
-the existing `yelp-rent` hub placeholder with the reviewed metadata and live
-URL.
+The portfolio coordinator accepted the candidate copy, claims, and thumbnail.
+Commits through `f99156bc102f4a88cec6d38b3f9c7ddad1621a58` are pushed to
+`origin/main`.
 
-Ali's 2026-11-07 standing authorization covers routine pushes and portfolio
-deployments after checks and coordinator review. No additional conversational
-publication approval is required. This assignment itself stops at the local
-release candidate, so no push, deployment, or hub edit has been made here.
+Production deployment is blocked at Vercel authentication. The installed CLI's
+stored token is invalid, the documented no-auth endpoint now returns only CLI
+instructions, and the existing browser session reaches an account identity
+chooser rather than an authenticated dashboard. No live URL exists, so
+`portfolio.json.demoUrl` remains blank and its deployment state is explicitly
+`blocked-vercel-auth`. The hub has not been edited.
 
 ## Release set
 
@@ -104,7 +104,7 @@ observational evidence shown directly.
 
 ## Recommendation
 
-Accept the copy and local release assets as the P2 candidate. Proceed to the
-bounded release milestone under standing authorization, then update
-`portfolio.json.demoUrl`, production-check the site, and hand the verified live
-URL plus metadata to the hub owner.
+Keep the pushed source candidate intact. Once Vercel authentication is restored,
+deploy `site/` to production, run the defined production checks, update
+`portfolio.json.demoUrl` and `deploymentStatus`, and hand the verified live URL
+plus metadata to the hub owner.
