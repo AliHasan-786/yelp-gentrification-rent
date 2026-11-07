@@ -163,6 +163,10 @@ class SiteDataTest(unittest.TestCase):
             (ROOT / "portfolio.json").read_text(encoding="utf-8")
         )
         self.assertEqual(metadata["id"], "yelp-rent")
+        self.assertEqual(
+            metadata["course"],
+            "INFO 5304 / CS 5304 — Data Science in the Wild",
+        )
         self.assertEqual(metadata["status"], "release-candidate")
         self.assertEqual(metadata["demoUrl"], "")
         self.assertIn("1,105", metadata["primaryMetric"])

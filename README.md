@@ -112,4 +112,4 @@ until the coordinator-reviewed deployment is completed.
 
 ## Course
 
-DS 5304 — Foundations of Data Science (Spring 2026)
+INFO 5304 / CS 5304 — Data Science in the Wild (Spring 2026)

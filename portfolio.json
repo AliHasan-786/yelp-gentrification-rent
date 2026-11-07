@@ -1,7 +1,7 @@
 {
   "id": "yelp-rent",
   "title": "The Brunch Index",
-  "course": "DS 5304 — Foundations of Data Science",
+  "course": "INFO 5304 / CS 5304 — Data Science in the Wild",
   "semester": "Spring 2026",
   "oneLine": "Interactive data essay on whether Yelp language precedes next-year ZIP-level rent growth across five metros.",
   "themes": [
