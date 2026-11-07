@@ -1,27 +1,26 @@
-# Decision brief — P2 release candidate
+# Decision brief — production release
 
 **Project:** The Brunch Index
 
 **Date:** 2026-11-07
 
-**Assignment:** `yelp-release-candidate-1`
+**Assignment:** `yelp-release-1`
 
 **Governing spec:** `/Users/alihasan/Documents/Codex/project-specs/SPEC_YELP_INTERACTIVE.md`
 
 **Repo:** `/Users/alihasan/Documents/Codex/2026-07-18/read-strategy-handoff-md-and-readme/yelp-gentrification-rent`
 
-## Current release state
+## Release decision
 
-The portfolio coordinator accepted the candidate copy, claims, and thumbnail.
-Commits through `f99156bc102f4a88cec6d38b3f9c7ddad1621a58` are pushed to
-`origin/main`.
+The accepted interactive is released and production-verified at
+[the-brunch-index.vercel.app](https://the-brunch-index.vercel.app). The Vercel
+deployment is `dpl_2AcEpJbcHSk8gFcrBAmbmpBpfoU2`; its immutable URL is
+`https://site-naur06n0h-ali-hasans-projects-734a68d1.vercel.app`, and the exact
+deployed source revision is `dcab3385222f79d6ae28a87568cd9cc17d8d2e03`.
 
-Production deployment is blocked at Vercel authentication. The installed CLI's
-stored token is invalid, the documented no-auth endpoint now returns only CLI
-instructions, and the existing browser session reaches an account identity
-chooser rather than an authenticated dashboard. No live URL exists, so
-`portfolio.json.demoUrl` remains blank and its deployment state is explicitly
-`blocked-vercel-auth`. The hub has not been edited.
+Anonymous production access is enabled. Vercel SSO protection was disabled for
+this project after it redirected anonymous visitors to login; Git-fork
+protection remains enabled. No portfolio-hub files were edited.
 
 ## Release set
 
@@ -32,29 +31,31 @@ chooser rather than an authenticated dashboard. No live URL exists, so
   correlation, and review frequency.
 - Effect-size panel comparing `+0.276 pp` with `6.70%` mean growth, plus the
   `13.5%` PCA, COVID-period, and fixed-effects context.
-- Method appendix with H1–H3 results, limitations, provenance, and notebook
-  links.
+- Method appendix with H1–H3 results, limitations, provenance, and public
+  notebook links.
 - Deterministic generator, executable pipeline notebook, regression tests,
   pinned dependencies, inert CI workflow, and Ali-facing explainer.
-- Public-safe integration metadata at `portfolio.json`.
-- Representative 1200 x 630 thumbnail at
-  `site/assets/the-brunch-index-thumbnail.png`.
-- Course-versus-corrected metric provenance at `docs/CLAIMS_LEDGER.md`.
+- Public integration metadata at `portfolio.json` and a representative
+  1200 x 630 thumbnail at `site/assets/the-brunch-index-thumbnail.png`.
 
-## Evidence verified on 2026-11-07
+## Production verification on 2026-11-07
 
-- `python3 scripts/build_site_data.py` regenerated both extracts byte-for-byte:
-  - `panel.json`: `f1f96c4aac4f62a6c6ff4ccdb140153bdc7b99ba1d7ece6ace65235b1c36bb49`
-  - `zcta.geojson`: `bcd2a843b1366e48e84d74be509188de38f0633cc28c961351dad8c6a27bf68a`
-- `python3 -m unittest discover -s tests -v`: 8/8 passing.
-- `notebooks/site_data_pipeline.ipynb` executed successfully with `nbconvert`.
-- `node --check site/app.js`, JSON parsing, and `git diff --check` passed.
-- Desktop and 390 px browser QA found no horizontal overflow and no console
-  warnings or errors.
-- Metro selection, year-slider state, ZIP detail rendering, deep links, and all
-  three lexicon sort modes were exercised successfully.
-- Local 390 px navigation load was 9 ms. The static site payload remains about
-  657 KiB; the spec's `<2s` requirement still needs production verification.
+- Anonymous desktop QA at 1440 x 1000: all five sections rendered, metro/year/
+  ZIP state changed correctly, all lexicon sort modes worked, and the console
+  had zero warnings or errors.
+- Fresh 390 x 844 headless browser context with an empty cache and unique query:
+  no horizontal overflow; `DOMContentLoaded` 250 ms; `loadEventEnd` 256 ms;
+  final first-party resource 302 ms; 184,141 transferred bytes.
+- The mobile timing passes the `<2s` acceptance threshold on the actual
+  production URL. It was measured on the local unthrottled network and is not
+  represented as simulated cellular performance.
+- Document, CSS, JavaScript, panel JSON, and geography GeoJSON returned 200.
+- All three public notebook links and the repository link returned 200 in a
+  real browser.
+- Mobile metro/year control, ZIP details, deep links, and review-frequency sort
+  were exercised successfully; the console had zero warnings or errors.
+- `python3 -m unittest discover -s tests -v`, `node --check site/app.js`, JSON
+  parsing, and `git diff --check` passed for the release record.
 
 ## Claims to preserve
 
@@ -68,7 +69,7 @@ chooser rather than an authenticated dashboard. No live URL exists, so
 - The analysis is observational. Public language may say **associated with**,
   **predicts**, or **precedes**, never that Yelp language causes rent growth.
 
-## Final prose for review
+## Portfolio copy
 
 **Title:** The Brunch Index
 
@@ -90,21 +91,16 @@ about +0.276 percentage points per score standard deviation against a 6.70%
 mean, with the COVID-era shock, non-significant quartile result, and limits of
 observational evidence shown directly.
 
-## Remaining release risks
+## Residual interpretation limits
 
-- Production `<2s` mobile performance and public links cannot be verified until
-  deployment.
 - The opening ZIP is illustrative, not representative or causal.
 - The analysis covers five Yelp metros and PC1 explains 13.5% of keyword
   variance.
-- Provider authentication or an app-enforced runtime prompt could still block
-  a release command; it must be reported rather than bypassed.
 - The stopped reviewer-loop automation remains out of scope and must not be
   invoked.
 
 ## Recommendation
 
-Keep the pushed source candidate intact. Once Vercel authentication is restored,
-deploy `site/` to production, run the defined production checks, update
-`portfolio.json.demoUrl` and `deploymentStatus`, and hand the verified live URL
-plus metadata to the hub owner.
+The project is ready for the portfolio-hub owner to integrate using
+`portfolio.json`, the verified live URL, and the supplied thumbnail. No project
+release blocker remains.

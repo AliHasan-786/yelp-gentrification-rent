@@ -32,6 +32,8 @@ This project investigates whether gentrification-linked language patterns in Yel
 
 `site/` contains a dependency-free static scrollytelling page with:
 
+**Live:** [the-brunch-index.vercel.app](https://the-brunch-index.vercel.app)
+
 - A ZIP-level opening story grounded in the generated panel
 - A five-metro choropleth with 2015–2022 slider and clickable ZIP drill-down
 - An interactive 30-term lexicon ranking by PCA loading, next-year correlation, or review frequency
@@ -107,8 +109,8 @@ Python · pandas · NumPy/scikit-learn (PCA) · SciPy · statsmodels (OLS/WLS) �
 `EXPLAINER.md` is the private-facing study guide for understanding and defending the implementation. The inert CI workflow and activation instructions live in `docs/ci/`.
 
 Public numbers and wording are frozen in `docs/CLAIMS_LEDGER.md`. Portfolio
-integration metadata lives in `portfolio.json`; its `demoUrl` remains blank
-until the coordinator-reviewed deployment is completed.
+integration metadata and the verified production revision live in
+`portfolio.json`.
 
 ## Course
 

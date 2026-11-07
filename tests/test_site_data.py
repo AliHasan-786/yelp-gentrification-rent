@@ -167,13 +167,18 @@ class SiteDataTest(unittest.TestCase):
             metadata["course"],
             "INFO 5304 / CS 5304 — Data Science in the Wild",
         )
-        self.assertEqual(metadata["status"], "release-candidate-pushed")
-        self.assertEqual(metadata["demoUrl"], "")
+        self.assertEqual(metadata["status"], "released")
+        self.assertEqual(
+            metadata["demoUrl"], "https://the-brunch-index.vercel.app"
+        )
         self.assertEqual(
             metadata["releaseSourceCommit"],
-            "f99156bc102f4a88cec6d38b3f9c7ddad1621a58",
+            "dcab3385222f79d6ae28a87568cd9cc17d8d2e03",
         )
-        self.assertEqual(metadata["deploymentStatus"], "blocked-vercel-auth")
+        self.assertEqual(metadata["deploymentStatus"], "production-verified")
+        self.assertEqual(
+            metadata["deploymentId"], "dpl_2AcEpJbcHSk8gFcrBAmbmpBpfoU2"
+        )
         self.assertIn("1,105", metadata["primaryMetric"])
         self.assertIn("+0.276 pp", metadata["primaryMetric"])
         self.assertTrue((ROOT / metadata["thumbnail"]).is_file())

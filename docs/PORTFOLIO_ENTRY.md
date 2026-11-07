@@ -12,4 +12,4 @@ An interactive data essay testing whether gentrification-coded language in Yelp 
 
 **Thumbnail:** `site/assets/the-brunch-index-thumbnail.png`
 
-**Links after publication:** Live interactive · Source repository
+**Links:** [Live interactive](https://the-brunch-index.vercel.app) · [Source repository](https://github.com/AliHasan-786/yelp-gentrification-rent)
