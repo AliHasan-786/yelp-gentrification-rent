@@ -1,0 +1,96 @@
+{
+  "protocolId": "yelp-transportability-2026-11-07-v1",
+  "amendmentId": "yelp-transportability-2026-11-09-v1.1",
+  "amendmentDate": "2026-11-09",
+  "evidenceStage": "retrospective-validation-planned-unrun",
+  "inputSha256": "b2b81fbc2a26141fe04b61a474de488b0cb5c28c9f850b1e2235656ef2fb0568",
+  "metros": [
+    "Indianapolis",
+    "Nashville",
+    "New Orleans",
+    "Philly MSA",
+    "Tampa Bay"
+  ],
+  "outer": {
+    "testYears": [2020, 2021, 2022],
+    "time": {
+      "trainRule": "year < test_year",
+      "testRule": "year == test_year",
+      "minimumTestRows": 20,
+      "minimumTestZipClusters": 10
+    },
+    "metroTime": {
+      "trainRule": "metro != held_out_metro and year < test_year",
+      "testRule": "metro == held_out_metro and year == test_year",
+      "minimumCellTestRows": 5,
+      "minimumCellTestZipClusters": 5,
+      "minimumAggregateMetroZipClusters": 10,
+      "aggregateRule": "concatenate the three valid year-cell predictions for each held-out metro"
+    }
+  },
+  "inner": {
+    "validationYearOffsetsFromOuterTestYear": [-2, -1],
+    "trainRule": "outer_train_member and year < validation_year",
+    "validationRule": "outer_train_member and year == validation_year",
+    "minimumTrainingYears": 3,
+    "minimumTrainingRows": 100,
+    "minimumTrainingZipClusters": 20,
+    "minimumValidationRows": 20,
+    "minimumValidationZipClusters": 10,
+    "score": "MAE",
+    "aggregation": "unweighted arithmetic mean of the two inner-fold MAEs",
+    "invalidCandidateRule": "a candidate is invalid if either required inner fold is absent, ineligible, nonfinite, or negative",
+    "emptyOuterRule": "retain the cell as not_executable; do not replace or drop it"
+  },
+  "selection": {
+    "ridgePenalties": [0.01, 0.1, 1.0, 10.0, 100.0],
+    "tieTolerance": 1e-12,
+    "tieBreak": "largest penalty",
+    "selectBaselineAndLanguageSeparately": true
+  },
+  "relativeImprovement": {
+    "denominator": "baseline_mae",
+    "zeroTolerance": 1e-12,
+    "baselinePositiveRule": "(baseline_mae - language_mae) / baseline_mae",
+    "bothZeroRule": "undefined; threshold not met; cell is null, not adverse",
+    "baselineZeroLanguagePositiveRule": "undefined; language is adverse",
+    "negativeOrNonfiniteMaeRule": "invalid metric; retain failure record"
+  },
+  "bootstrap": {
+    "unit": "ZIP cluster",
+    "replicates": 2000,
+    "seed": 5304,
+    "minimumZipClusters": 10,
+    "finiteReplicatesRequired": 2000,
+    "ci": "paired percentile 95%",
+    "failureRule": "CI unavailable; retain point estimate and cell; success cannot be declared"
+  },
+  "decision": {
+    "minimumPooledOutOfTimeRelativeGain": 0.02,
+    "pooledDeltaMaeCiUpperMustBeBelow": 0.0,
+    "maximumYearRelativeWorsening": 0.05,
+    "minimumNonWorseMetroCount": 4,
+    "metroCount": 5,
+    "minimumMedianMetroRelativeGain": 0.02,
+    "maximumMetroRelativeWorsening": 0.10,
+    "pooledDeltaMaeAboveZeroIsAdverse": true,
+    "twoOrMoreWorseMetrosIsAdverse": true,
+    "languageOnlyExecutionFailureIsAdverse": true,
+    "sharedExecutionFailureWithoutAdverseEvidence": "inconclusive",
+    "missingRequiredCiWithoutAdverseEvidence": "inconclusive",
+    "nullDeltaCountsAsNonWorseButNotImprovement": true,
+    "successRulesChanged": false
+  },
+  "reporting": {
+    "retainEveryYearMetroCell": true,
+    "retainInvalidAndAdverseCells": true,
+    "allowSelectiveDropping": false,
+    "allowPostOutcomeRuleChanges": false,
+    "priorOutcomeExposureLabel": "retrospective validation; not fresh holdout or confirmatory"
+  },
+  "rightsGate": {
+    "yelpAgreementStatus": "unresolved-active-term-and-publication-approval",
+    "zoriPublicDerivativeStatus": "unresolved-product-specific-applicability",
+    "publicReleaseAllowedByThisProtocol": false
+  }
+}
