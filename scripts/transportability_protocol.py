@@ -219,26 +219,62 @@ def make_inner_folds(
 
 
 def select_penalty(
-    scores: Mapping[float, Mapping[str, float]],
-    required_fold_ids: Sequence[str],
-    *,
-    tie_tolerance: float = 1e-12,
+    scores: Mapping[Any, Mapping[str, Any]],
+    inner_folds: Sequence[Mapping[str, Any]],
+    outer_fold: Mapping[str, Any],
+    config: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Macro-average required inner-fold MAEs and use the frozen tie-break."""
     valid: list[tuple[float, float]] = []
     invalid: dict[str, list[str]] = {}
-    required = list(required_fold_ids)
-    if len(required) != 2 or len(set(required)) != 2:
-        raise ProtocolError("exactly two distinct inner-fold IDs are required")
-    for penalty, fold_scores in scores.items():
+    if any(not isinstance(fold, Mapping) for fold in inner_folds):
+        raise ProtocolError("inner folds must be records")
+    required = [fold.get("fold_id") for fold in inner_folds]
+    expected_pairs = {
+        (
+            f"{outer_fold.get('fold_id')}-inner-{int(outer_fold.get('test_year')) + int(offset)}",
+            int(outer_fold.get("test_year")) + int(offset),
+        )
+        for offset in config["inner"]["validationYearOffsetsFromOuterTestYear"]
+    }
+    supplied_pairs = {
+        (fold.get("fold_id"), fold.get("validation_year")) for fold in inner_folds
+        if isinstance(fold.get("fold_id"), str)
+        and isinstance(fold.get("validation_year"), int)
+        and not isinstance(fold.get("validation_year"), bool)
+    }
+    if len(inner_folds) != 2 or supplied_pairs != expected_pairs:
+        raise ProtocolError("exact required inner-fold identities are required")
+    if any(fold.get("eligible") is not True for fold in inner_folds):
+        raise ProtocolError("all required inner folds must be eligible")
+
+    allowed = [float(value) for value in config["selection"]["ridgePenalties"]]
+    normalized_scores: dict[float, Mapping[str, Any]] = {}
+    for raw_penalty, fold_scores in scores.items():
+        if isinstance(raw_penalty, bool) or not isinstance(raw_penalty, (int, float)):
+            raise ProtocolError("penalty keys must be finite numeric values")
+        penalty = float(raw_penalty)
+        if not math.isfinite(penalty) or penalty in normalized_scores:
+            raise ProtocolError("penalty keys must be unique finite numeric values")
+        normalized_scores[penalty] = fold_scores
+    if set(normalized_scores) != set(allowed):
+        raise ProtocolError("scores must contain exactly the frozen ridge penalties")
+
+    for penalty in allowed:
+        fold_scores = normalized_scores[penalty]
         reasons = []
-        if set(fold_scores) != set(required):
+        if not isinstance(fold_scores, Mapping) or set(fold_scores) != set(required):
             reasons.append("missing_or_extra_inner_fold")
-        values = [fold_scores.get(fold_id) for fold_id in required]
+            values = []
+        else:
+            values = [fold_scores.get(fold_id) for fold_id in required]
         if any(
-            value is None or not math.isfinite(float(value)) or float(value) < 0
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(float(value))
+            or float(value) < 0
             for value in values
-        ):
+        ) or not values:
             reasons.append("invalid_inner_mae")
         if reasons:
             invalid[str(penalty)] = reasons
@@ -247,6 +283,7 @@ def select_penalty(
     if not valid:
         raise ProtocolError("no penalty has all required finite inner-fold MAEs")
     best_score = min(score for _, score in valid)
+    tie_tolerance = float(config["selection"]["tieTolerance"])
     tied = [
         penalty for penalty, score in valid
         if abs(score - best_score) <= tie_tolerance
@@ -319,6 +356,16 @@ def _valid_ci(value: Any) -> bool:
     return math.isfinite(lower) and math.isfinite(upper) and lower <= upper
 
 
+def _matches_exact_strings(value: Any, expected: Sequence[str]) -> bool:
+    return (
+        isinstance(value, (list, tuple))
+        and all(isinstance(item, str) for item in value)
+        and len(value) == len(expected)
+        and len(set(value)) == len(value)
+        and set(value) == set(expected)
+    )
+
+
 def classify_primary_decision(
     pooled: Mapping[str, Any],
     years: Sequence[Mapping[str, Any]],
@@ -332,44 +379,123 @@ def classify_primary_decision(
     year_statuses = [_pair_status(pair, zero_tolerance) for pair in years]
     metro_statuses = [_pair_status(pair, zero_tolerance) for pair in metros]
     reasons: list[str] = []
+    identity = config["metricIdentity"]
+    expected_year_pairs = {
+        (f"time-{year}", year) for year in config["outer"]["testYears"]
+    }
+    expected_metro_pairs = {
+        (f"metro-{metro}", metro) for metro in config["metros"]
+    }
+    year_pairs = [
+        (pair.get("cell_id"), pair.get("year"))
+        for pair in years
+        if isinstance(pair.get("cell_id"), str)
+        and isinstance(pair.get("year"), int)
+        and not isinstance(pair.get("year"), bool)
+    ]
+    metro_pairs = [
+        (pair.get("aggregate_id"), pair.get("metro"))
+        for pair in metros
+        if isinstance(pair.get("aggregate_id"), str)
+        and isinstance(pair.get("metro"), str)
+    ]
+    pooled_identity_valid = (
+        pooled.get("scope") == identity["pooledOutOfTimeScope"]
+        and _matches_exact_strings(
+            pooled.get("cell_ids"), identity["pooledOutOfTimeCellIds"]
+        )
+    )
+    if not pooled_identity_valid:
+        reasons.append("invalid_pooled_scope_or_cells")
+    if (
+        len(year_pairs) != len(expected_year_pairs)
+        or len(set(year_pairs)) != len(year_pairs)
+        or set(year_pairs) != expected_year_pairs
+    ):
+        reasons.append("invalid_year_cell_identities")
+    if (
+        len(metro_pairs) != len(expected_metro_pairs)
+        or len(set(metro_pairs)) != len(metro_pairs)
+        or set(metro_pairs) != expected_metro_pairs
+    ):
+        reasons.append("invalid_metro_cell_identities")
+    if pooled.get("eligible") is not True:
+        reasons.append("ineligible_pooled_metric")
+    if any(pair.get("eligible") is not True for pair in years):
+        reasons.append("ineligible_year_cell")
+    if any(pair.get("eligible") is not True for pair in metros):
+        reasons.append("ineligible_metro_cell")
 
-    if len(years) != 3 or len(metros) != rules["metroCount"]:
-        reasons.append("missing_required_cells")
-    if pooled_status["status"] == "language_failure" or any(
+    claimed_years = [
+        (pair, status)
+        for pair, status in zip(years, year_statuses)
+        if isinstance(pair.get("cell_id"), str)
+        and isinstance(pair.get("year"), int)
+        and not isinstance(pair.get("year"), bool)
+        and (pair.get("cell_id"), pair.get("year")) in expected_year_pairs
+    ]
+    claimed_metros = [
+        (pair, status)
+        for pair, status in zip(metros, metro_statuses)
+        if isinstance(pair.get("aggregate_id"), str)
+        and isinstance(pair.get("metro"), str)
+        and (pair.get("aggregate_id"), pair.get("metro")) in expected_metro_pairs
+    ]
+    if (
+        pooled_identity_valid and pooled_status["status"] == "language_failure"
+    ) or any(
         status["status"] == "language_failure"
-        for status in year_statuses + metro_statuses
+        for _, status in claimed_years + claimed_metros
     ):
         reasons.append("language_only_execution_failure")
-    if pooled_status["status"] == "defined" and pooled_status["adverse"]:
+    if (
+        pooled_identity_valid
+        and pooled.get("eligible") is True
+        and pooled_status["status"] == "defined"
+        and pooled_status["adverse"]
+    ):
         reasons.append("pooled_language_worse")
-    if pooled_status["status"] == "baseline_zero_language_positive":
+    if (
+        pooled_identity_valid
+        and pooled.get("eligible") is True
+        and pooled_status["status"] == "baseline_zero_language_positive"
+    ):
         reasons.append("pooled_language_worse_with_zero_baseline")
 
-    year_worse = 0
-    for status in year_statuses:
+    for pair, status in claimed_years:
+        if pair.get("eligible") is not True:
+            continue
         if status["status"] == "baseline_zero_language_positive":
             reasons.append("year_language_worse_with_zero_baseline")
-            year_worse += 1
         elif status["status"] == "defined" and status["gain"] < -rules[
             "maximumYearRelativeWorsening"
         ]:
             reasons.append("year_worsening_exceeds_limit")
-            year_worse += 1
 
-    worse_metros = 0
-    for status in metro_statuses:
+    worse_metros: set[str] = set()
+    for pair, status in claimed_metros:
+        if pair.get("eligible") is not True:
+            continue
         if status["status"] == "baseline_zero_language_positive":
             reasons.append("metro_language_worse_with_zero_baseline")
-            worse_metros += 1
+            worse_metros.add(pair["metro"])
         elif status["status"] == "defined":
             if status["gain"] < 0:
-                worse_metros += 1
+                worse_metros.add(pair["metro"])
             if status["gain"] < -rules["maximumMetroRelativeWorsening"]:
                 reasons.append("metro_worsening_exceeds_limit")
-    if worse_metros >= 2:
+    if len(worse_metros) >= 2:
         reasons.append("two_or_more_worse_metros")
 
-    adverse_reasons = sorted(set(reasons) - {"missing_required_cells"})
+    non_adverse_reasons = {
+        "invalid_pooled_scope_or_cells",
+        "invalid_year_cell_identities",
+        "invalid_metro_cell_identities",
+        "ineligible_pooled_metric",
+        "ineligible_year_cell",
+        "ineligible_metro_cell",
+    }
+    adverse_reasons = sorted(set(reasons) - non_adverse_reasons)
     if adverse_reasons:
         return {"decision": "non-transportable", "reasons": sorted(set(reasons))}
 
@@ -411,15 +537,53 @@ def classify_primary_decision(
 
 def apply_coverage_gate(
     primary_decision: str,
-    sensitivity_results: Mapping[str, Mapping[str, bool]],
+    sensitivity_results: Sequence[Mapping[str, Any]],
+    config: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Allow coverage-conditional only for a single frozen threshold in both tasks."""
+    """Apply only the frozen coverage thresholds in their declared order."""
     if primary_decision != "inconclusive":
-        return {"decision": primary_decision, "threshold": None}
-    passing = sorted(
-        threshold for threshold, result in sensitivity_results.items()
-        if result.get("out_of_time_passes") and result.get("metro_time_passes")
-    )
+        return {
+            "decision": primary_decision,
+            "threshold": None,
+            "passing_thresholds": [],
+        }
+    planned = [
+        item["id"] for item in config["sensitivities"]["reviewCoverageThresholds"]
+    ]
+    if any(not isinstance(result, Mapping) for result in sensitivity_results):
+        return {
+            "decision": "inconclusive",
+            "threshold": None,
+            "passing_thresholds": [],
+            "reasons": ["invalid_coverage_sensitivity_identities"],
+        }
+    supplied = [result.get("threshold_id") for result in sensitivity_results]
+    if (
+        len(supplied) != len(planned)
+        or any(not isinstance(value, str) for value in supplied)
+        or len(set(supplied)) != len(supplied)
+        or set(supplied) != set(planned)
+    ):
+        return {
+            "decision": "inconclusive",
+            "threshold": None,
+            "passing_thresholds": [],
+            "reasons": ["invalid_coverage_sensitivity_identities"],
+        }
+    by_id = {result["threshold_id"]: result for result in sensitivity_results}
+    passing = [
+        threshold for threshold in planned
+        if by_id[threshold].get("out_of_time_passes") is True
+        and by_id[threshold].get("metro_time_passes") is True
+    ]
     if not passing:
-        return {"decision": "inconclusive", "threshold": None}
-    return {"decision": "coverage-conditional", "threshold": passing[0]}
+        return {
+            "decision": "inconclusive",
+            "threshold": None,
+            "passing_thresholds": [],
+        }
+    return {
+        "decision": "coverage-conditional",
+        "threshold": passing[0],
+        "passing_thresholds": passing,
+    }

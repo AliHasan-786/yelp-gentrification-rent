@@ -83,6 +83,38 @@ and language penalties are selected separately from
 `[0.01, 0.1, 1, 10, 100]`; scores tied within `1e-12` choose the larger penalty.
 If no candidate is valid, the outer cell is retained as `not_executable`.
 
+## Pre-outcome invariant clarification
+
+Execution review on 2026-11-09 found three helper contracts that were not
+strict enough. This clarification was recorded before any outcome access. It
+does not change the v1 protocol or any numerical decision threshold.
+
+Penalty selection requires exactly two distinct eligible inner-fold records.
+Their fold IDs and validation years must match the declared outer fold and its
+two frozen rolling-origin years.
+Every model must supply scores for all and only the frozen ridge penalties.
+Unknown, missing, duplicate, Boolean, nonfinite, or malformed candidate and
+fold identities fail closed. A candidate with an invalid fold score remains in
+the audit record but cannot be selected.
+
+Decision inputs carry immutable identities. The pooled out-of-time metric must
+declare scope `pooled_out_of_time`, the three cell IDs `time-2020`,
+`time-2021`, and `time-2022`, and eligibility. Year metrics require one
+eligible record for each of those three cells. Metro metrics require one
+eligible aggregate for each configured metro. Shuffled input order is allowed.
+Missing, duplicate, extra, unknown, inconsistent, or ineligible identities
+cannot satisfy success. They produce an inconclusive decision unless a record
+claiming a required identity contains evidence that meets a frozen adverse
+rule. Unknown identities never count as required or adverse evidence.
+
+The review-count sensitivities are exactly `reviews>=20`, `reviews>=50`, and
+`reviews>=100`. All three results must be supplied. The helper reports every
+threshold that passes both transfer tasks. If more than one passes, the primary
+coverage-conditional label uses the first passing threshold in the frozen
+ascending order. This picks the least restrictive passing threshold and keeps
+the most rows. An unknown or incomplete threshold set cannot qualify. A
+non-transportable primary result cannot be upgraded.
+
 ## Undefined values, uncertainty, and failures
 
 Relative MAE gain uses `(MAE(B) - MAE(L)) / MAE(B)` only when baseline MAE is

@@ -2,6 +2,8 @@
   "protocolId": "yelp-transportability-2026-11-07-v1",
   "amendmentId": "yelp-transportability-2026-11-09-v1.1",
   "amendmentDate": "2026-11-09",
+  "clarificationId": "yelp-transportability-2026-11-09-v1.1.1",
+  "clarificationDate": "2026-11-09",
   "evidenceStage": "retrospective-validation-planned-unrun",
   "inputSha256": "b2b81fbc2a26141fe04b61a474de488b0cb5c28c9f850b1e2235656ef2fb0568",
   "metros": [
@@ -44,9 +46,19 @@
   },
   "selection": {
     "ridgePenalties": [0.01, 0.1, 1.0, 10.0, 100.0],
+    "candidateIdentityRule": "all and only the listed penalties must be scored for each model",
+    "requiredInnerFoldRule": "exactly two distinct eligible inner-fold records must match the declared outer fold ID and its two frozen validation years",
     "tieTolerance": 1e-12,
     "tieBreak": "largest penalty",
     "selectBaselineAndLanguageSeparately": true
+  },
+  "metricIdentity": {
+    "pooledOutOfTimeScope": "pooled_out_of_time",
+    "pooledOutOfTimeCellIds": ["time-2020", "time-2021", "time-2022"],
+    "yearCellIdentityRule": "exactly one eligible metric for each configured time fold, identified by cell_id and year",
+    "metroCellIdentityRule": "exactly one eligible aggregate for each configured metro, identified by aggregate_id and metro",
+    "invalidSetRule": "inconclusive unless a record claiming a required identity contains evidence that meets a frozen adverse rule",
+    "unknownIdentityRule": "unknown cells never qualify as required evidence and never affect success or adverse classification"
   },
   "relativeImprovement": {
     "denominator": "baseline_mae",
@@ -80,6 +92,16 @@
     "missingRequiredCiWithoutAdverseEvidence": "inconclusive",
     "nullDeltaCountsAsNonWorseButNotImprovement": true,
     "successRulesChanged": false
+  },
+  "sensitivities": {
+    "reviewCoverageThresholds": [
+      {"id": "reviews>=20", "minimumTotalReviews": 20},
+      {"id": "reviews>=50", "minimumTotalReviews": 50},
+      {"id": "reviews>=100", "minimumTotalReviews": 100}
+    ],
+    "coverageConditionalIdentityRule": "all and only the three listed threshold results must be supplied",
+    "coverageConditionalSelectionRule": "report every threshold that passes both tasks; use the first passing threshold in the listed ascending order as the primary label because it is the least restrictive and retains the most rows",
+    "adversePrimaryCannotUpgrade": true
   },
   "reporting": {
     "retainEveryYearMetroCell": true,
