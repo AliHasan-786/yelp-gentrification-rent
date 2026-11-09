@@ -299,10 +299,13 @@ def relative_mae_gain(
     baseline_mae: Any, language_mae: Any, *, zero_tolerance: float = 1e-12
 ) -> dict[str, Any]:
     """Apply frozen zero/undefined denominator behavior."""
-    try:
-        values = (float(baseline_mae), float(language_mae))
-    except (TypeError, ValueError):
+    raw_values = (baseline_mae, language_mae)
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float))
+        for value in raw_values
+    ):
         return {"status": "invalid_metric", "gain": None, "adverse": None}
+    values = tuple(float(value) for value in raw_values)
     if any(not math.isfinite(value) or value < 0 for value in values):
         return {"status": "invalid_metric", "gain": None, "adverse": None}
     baseline, language = values
@@ -335,9 +338,9 @@ def validate_bootstrap(
 
 
 def _pair_status(pair: Mapping[str, Any], zero_tolerance: float) -> dict[str, Any]:
-    if pair.get("shared_failure"):
+    if pair.get("shared_failure") is True:
         return {"status": "shared_failure", "gain": None, "adverse": False}
-    if pair.get("language_failure"):
+    if pair.get("language_failure") is True:
         return {"status": "language_failure", "gain": None, "adverse": True}
     return relative_mae_gain(
         pair.get("baseline_mae"),
@@ -349,10 +352,12 @@ def _pair_status(pair: Mapping[str, Any], zero_tolerance: float) -> dict[str, An
 def _valid_ci(value: Any) -> bool:
     if not isinstance(value, (list, tuple)) or len(value) != 2:
         return False
-    try:
-        lower, upper = (float(item) for item in value)
-    except (TypeError, ValueError):
+    if any(
+        isinstance(item, bool) or not isinstance(item, (int, float))
+        for item in value
+    ):
         return False
+    lower, upper = (float(item) for item in value)
     return math.isfinite(lower) and math.isfinite(upper) and lower <= upper
 
 
@@ -376,8 +381,18 @@ def classify_primary_decision(
     rules = config["decision"]
     zero_tolerance = config["relativeImprovement"]["zeroTolerance"]
     pooled_status = _pair_status(pooled, zero_tolerance)
-    year_statuses = [_pair_status(pair, zero_tolerance) for pair in years]
-    metro_statuses = [_pair_status(pair, zero_tolerance) for pair in metros]
+    year_statuses = [
+        _pair_status(pair, zero_tolerance)
+        if isinstance(pair, Mapping)
+        else {"status": "invalid_metric", "gain": None, "adverse": None}
+        for pair in years
+    ]
+    metro_statuses = [
+        _pair_status(pair, zero_tolerance)
+        if isinstance(pair, Mapping)
+        else {"status": "invalid_metric", "gain": None, "adverse": None}
+        for pair in metros
+    ]
     reasons: list[str] = []
     identity = config["metricIdentity"]
     expected_year_pairs = {
@@ -389,14 +404,16 @@ def classify_primary_decision(
     year_pairs = [
         (pair.get("cell_id"), pair.get("year"))
         for pair in years
-        if isinstance(pair.get("cell_id"), str)
+        if isinstance(pair, Mapping)
+        and isinstance(pair.get("cell_id"), str)
         and isinstance(pair.get("year"), int)
         and not isinstance(pair.get("year"), bool)
     ]
     metro_pairs = [
         (pair.get("aggregate_id"), pair.get("metro"))
         for pair in metros
-        if isinstance(pair.get("aggregate_id"), str)
+        if isinstance(pair, Mapping)
+        and isinstance(pair.get("aggregate_id"), str)
         and isinstance(pair.get("metro"), str)
     ]
     pooled_identity_valid = (
@@ -408,28 +425,37 @@ def classify_primary_decision(
     if not pooled_identity_valid:
         reasons.append("invalid_pooled_scope_or_cells")
     if (
-        len(year_pairs) != len(expected_year_pairs)
+        len(years) != len(expected_year_pairs)
+        or len(year_pairs) != len(years)
         or len(set(year_pairs)) != len(year_pairs)
         or set(year_pairs) != expected_year_pairs
     ):
         reasons.append("invalid_year_cell_identities")
     if (
-        len(metro_pairs) != len(expected_metro_pairs)
+        len(metros) != len(expected_metro_pairs)
+        or len(metro_pairs) != len(metros)
         or len(set(metro_pairs)) != len(metro_pairs)
         or set(metro_pairs) != expected_metro_pairs
     ):
         reasons.append("invalid_metro_cell_identities")
     if pooled.get("eligible") is not True:
         reasons.append("ineligible_pooled_metric")
-    if any(pair.get("eligible") is not True for pair in years):
+    if any(
+        not isinstance(pair, Mapping) or pair.get("eligible") is not True
+        for pair in years
+    ):
         reasons.append("ineligible_year_cell")
-    if any(pair.get("eligible") is not True for pair in metros):
+    if any(
+        not isinstance(pair, Mapping) or pair.get("eligible") is not True
+        for pair in metros
+    ):
         reasons.append("ineligible_metro_cell")
 
     claimed_years = [
         (pair, status)
         for pair, status in zip(years, year_statuses)
-        if isinstance(pair.get("cell_id"), str)
+        if isinstance(pair, Mapping)
+        and isinstance(pair.get("cell_id"), str)
         and isinstance(pair.get("year"), int)
         and not isinstance(pair.get("year"), bool)
         and (pair.get("cell_id"), pair.get("year")) in expected_year_pairs
@@ -437,7 +463,8 @@ def classify_primary_decision(
     claimed_metros = [
         (pair, status)
         for pair, status in zip(metros, metro_statuses)
-        if isinstance(pair.get("aggregate_id"), str)
+        if isinstance(pair, Mapping)
+        and isinstance(pair.get("aggregate_id"), str)
         and isinstance(pair.get("metro"), str)
         and (pair.get("aggregate_id"), pair.get("metro")) in expected_metro_pairs
     ]

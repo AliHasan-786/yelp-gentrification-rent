@@ -106,6 +106,11 @@ Missing, duplicate, extra, unknown, inconsistent, or ineligible identities
 cannot satisfy success. They produce an inconclusive decision unless a record
 claiming a required identity contains evidence that meets a frozen adverse
 rule. Unknown identities never count as required or adverse evidence.
+Validation applies to the complete raw year and metro collections before any
+record is filtered. An extra malformed record cannot disappear during identity
+checking. MAEs and confidence interval endpoints must be finite integers or
+floats. Boolean and other nonnumeric values are invalid. Numeric zero keeps the
+existing null and adverse behavior.
 
 The review-count sensitivities are exactly `reviews>=20`, `reviews>=50`, and
 `reviews>=100`. All three results must be supplied. The helper reports every

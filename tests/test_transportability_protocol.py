@@ -354,6 +354,49 @@ class SelectionAndFailureRuleTest(unittest.TestCase):
         self.assertEqual(result["decision"], "inconclusive")
         self.assertIn("ineligible_year_cell", result["reasons"])
 
+    def test_malformed_extra_year_or_metro_cannot_be_filtered_away(self):
+        pooled, years, metros = decision_inputs()
+        extra_year = pair(
+            10.0, 9.0, cell_id="unexpected", year=None, eligible=True
+        )
+        result = MODULE.classify_primary_decision(
+            pooled, years + [extra_year], metros, self.config
+        )
+        self.assertEqual(result["decision"], "inconclusive")
+        self.assertIn("invalid_year_cell_identities", result["reasons"])
+
+        pooled, years, metros = decision_inputs()
+        extra_metro = pair(
+            0.0,
+            0.0,
+            aggregate_id="metro-Unexpected",
+            metro=None,
+            eligible=True,
+        )
+        result = MODULE.classify_primary_decision(
+            pooled, years, metros + [extra_metro], self.config
+        )
+        self.assertEqual(result["decision"], "inconclusive")
+        self.assertIn("invalid_metro_cell_identities", result["reasons"])
+
+    def test_boolean_or_nonnumeric_metrics_and_ci_are_invalid(self):
+        pooled, years, metros = decision_inputs()
+        pooled.update(baseline_mae=True, language_mae=False)
+        result = MODULE.classify_primary_decision(pooled, years, metros, self.config)
+        self.assertEqual(result["decision"], "inconclusive")
+        self.assertIn("undefined_or_shared_execution_failure", result["reasons"])
+
+        pooled, years, metros = decision_inputs()
+        years[0].update(baseline_mae="10.0", language_mae=9.0)
+        result = MODULE.classify_primary_decision(pooled, years, metros, self.config)
+        self.assertEqual(result["decision"], "inconclusive")
+
+        pooled, years, metros = decision_inputs()
+        pooled["delta_mae_ci"] = [-1.0, False]
+        result = MODULE.classify_primary_decision(pooled, years, metros, self.config)
+        self.assertEqual(result["decision"], "inconclusive")
+        self.assertIn("required_pooled_ci_unavailable", result["reasons"])
+
     def test_arbitrary_pooled_scope_or_cells_cannot_pass(self):
         pooled, years, metros = decision_inputs()
         pooled["scope"] = "arbitrary_summary"

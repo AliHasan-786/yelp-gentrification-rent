@@ -58,7 +58,9 @@
     "yearCellIdentityRule": "exactly one eligible metric for each configured time fold, identified by cell_id and year",
     "metroCellIdentityRule": "exactly one eligible aggregate for each configured metro, identified by aggregate_id and metro",
     "invalidSetRule": "inconclusive unless a record claiming a required identity contains evidence that meets a frozen adverse rule",
-    "unknownIdentityRule": "unknown cells never qualify as required evidence and never affect success or adverse classification"
+    "unknownIdentityRule": "unknown cells never qualify as required evidence and never affect success or adverse classification",
+    "rawCollectionRule": "the raw year and metro collections must have exact required sizes; malformed or extra records cannot be filtered before validation",
+    "metricValueRule": "MAEs and confidence interval endpoints must be finite int or float values; Boolean and other nonnumeric values are invalid; numeric zero remains valid"
   },
   "relativeImprovement": {
     "denominator": "baseline_mae",
